@@ -13,6 +13,12 @@ AHT20
 >
 > 单纯的读取温湿度, 返回单位为0.01(°C/%)的值
 
+printf
+
+> #include printf.h
+>
+> 以便将printf重定向至串口
+
 Switch_I2C1
 
 > Switch_I2C1(uint8_t stat)  使能或禁用I2C1
