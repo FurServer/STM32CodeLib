@@ -102,7 +102,7 @@ U8G2_MIRROR_VERTICAL    //没有旋转，竖向显示镜像
 ********************************************/
 void u8g2Init_SPI(u8g2_t* u8g2)
 {
-    u8g2_Setup_ssd1315_128x64_noname_1(
+    u8g2_Setup_ssd1315_128x64_noname_f(
         u8g2,
         U8G2_R2,
         u8x8_byte_stm32_hw_spi,
