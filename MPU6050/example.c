@@ -3,7 +3,7 @@
  * @brief   使用示例
  * @note    可能需要在gcc-arm-none-eabi.cmake中
  *          加上set(CMAKE_C_LINK_FLAGS "${CMAKE_C_LINK_FLAGS} -Wl,-u,_printf_float")
- *          以正确编译浮点数printf
+ *          以正确编译浮点数snprintf
  */
 
 #include "mpu6050.h"
