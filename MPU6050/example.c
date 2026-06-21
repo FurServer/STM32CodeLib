@@ -1,6 +1,9 @@
 /**
  * @file    example.c
  * @brief   使用示例
+ * @note    可能需要在gcc-arm-none-eabi.cmake中
+ *          加上set(CMAKE_C_LINK_FLAGS "${CMAKE_C_LINK_FLAGS} -Wl,-u,_printf_float")
+ *          以正确编译浮点数printf
  */
 
 #include "mpu6050.h"
@@ -48,6 +51,8 @@ int main(void)
             mpu6050_read(&imu, g_acc, g_dps);
         }
 
+
+		char buf[32];
         u8g2_FirstPage(&u8g2);
         do
         {
