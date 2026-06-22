@@ -187,7 +187,7 @@ uint8_t mpu6050_read_temperature(float *celsius)
 }
 
 /* ------------------------------------------------------------------ */
-/* 快速平方根倒数（Mahony/Madgwick 经典实现）                          */
+// 快速平方根倒数
 static float inv_sqrt(float x)
 {
     float halfx = 0.5f * x;
