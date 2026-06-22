@@ -57,9 +57,7 @@ static void be16x3(const uint8_t *p, int16_t out[3])
 }
 
 /* ------------------------------------------------------------------ */
-uint8_t mpu6050_init(mpu6050_t *dev,
-                     mpu6050_accel_range_t accel,
-                     mpu6050_gyro_range_t  gyro)
+uint8_t mpu6050_init(mpu6050_t *dev, mpu6050_accel_range_t accel, mpu6050_gyro_range_t  gyro)
 {
     uint8_t id = 0;
 
@@ -267,8 +265,7 @@ uint8_t mpu6050_update(mpu6050_t *dev, float dt)
     dev->q[3] += ( qa * gz + qb * gy - qc * gx);
 
     /* 归一化四元数 */
-    recip_norm = inv_sqrt(dev->q[0] * dev->q[0] + dev->q[1] * dev->q[1] +
-                          dev->q[2] * dev->q[2] + dev->q[3] * dev->q[3]);
+    recip_norm = inv_sqrt(dev->q[0] * dev->q[0] + dev->q[1] * dev->q[1] + dev->q[2] * dev->q[2] + dev->q[3] * dev->q[3]);
     dev->q[0] *= recip_norm;
     dev->q[1] *= recip_norm;
     dev->q[2] *= recip_norm;
@@ -287,8 +284,7 @@ void mpu6050_get_quaternion(const mpu6050_t *dev, float q[4])
     q[3] = dev->q[3];
 }
 
-void mpu6050_get_euler(const mpu6050_t *dev,
-                       float *roll, float *pitch, float *yaw)
+void mpu6050_get_euler(const mpu6050_t *dev, float *roll, float *pitch, float *yaw)
 {
     float w, x, y, z;
     const float rad2deg = 57.295779513f;
