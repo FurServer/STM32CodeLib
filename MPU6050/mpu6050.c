@@ -192,11 +192,11 @@ static float inv_sqrt(float x)
 {
     float halfx = 0.5f * x;
     float y = x;
-    long  i = *(long *)&y;
-    i = 0x5f3759df - (i >> 1);
+    long  i = *(long *)&y;				// evil floating point bit level hacking
+    i = 0x5f3759df - (i >> 1);			// what the f**k?
     y = *(float *)&i;
-    y = y * (1.5f - (halfx * y * y));
-    y = y * (1.5f - (halfx * y * y));
+    y = y * (1.5f - (halfx * y * y));	// 1st iteration
+    y = y * (1.5f - (halfx * y * y));	// 2nd iteration, this can be removed
     return y;
 }
 
