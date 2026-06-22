@@ -103,6 +103,10 @@ uint8_t mpu6050_init(mpu6050_t *dev, mpu6050_accel_range_t accel, mpu6050_gyro_r
     }
 
     g_delay(50);
+
+    /* 用加速度计直接计算初始姿态，避免上电时从“水平”缓慢收敛导致的初期数据错误 */
+    mpu6050_set_quaternion_from_accel(dev, 32);
+
     return 0;
 }
 
@@ -198,6 +202,68 @@ static float inv_sqrt(float x)
     return y;
 }
 
+/* ------------------------------------------------------------------ */
+uint8_t mpu6050_set_quaternion_from_accel(mpu6050_t *dev, uint16_t samples)
+{
+    float sum[3] = {0.0f, 0.0f, 0.0f};
+    float ax, ay, az, recip_norm;
+    float roll, pitch;
+    float cr, sr, cp, sp;
+    int16_t a[3], g[3];
+    uint16_t i;
+
+    if (dev == NULL) return 1;
+    if (samples == 0) samples = 1;
+
+    /* 多次采样取平均，降低加速度计噪声对初始姿态的影响 */
+    for (i = 0; i < samples; i++) {
+        if (mpu6050_read_raw(a, g) != 0) return 1;
+        sum[0] += (float)a[0];
+        sum[1] += (float)a[1];
+        sum[2] += (float)a[2];
+        g_delay(1);
+    }
+
+    ax = sum[0] / (float)samples;
+    ay = sum[1] / (float)samples;
+    az = sum[2] / (float)samples;
+
+    /* 加速度全为 0（异常）时退回单位四元数 */
+    if ((ax == 0.0f) && (ay == 0.0f) && (az == 0.0f)) {
+        dev->q[0] = 1.0f;
+        dev->q[1] = dev->q[2] = dev->q[3] = 0.0f;
+        return 1;
+    }
+
+    /* 归一化重力方向向量 */
+    recip_norm = inv_sqrt(ax * ax + ay * ay + az * az);
+    ax *= recip_norm;
+    ay *= recip_norm;
+    az *= recip_norm;
+
+    /* 由重力方向求 roll / pitch（yaw 无法由加速度计确定，取 0），
+     * 约定与 mpu6050_get_euler 一致：roll 绕 X 轴，pitch 绕 Y 轴。 */
+    roll  = atan2f(ay, az);
+    pitch = atan2f(-ax, sqrtf(ay * ay + az * az));
+
+    /* 欧拉角(ZYX, yaw=0) 转四元数 */
+    cr = cosf(roll  * 0.5f);
+    sr = sinf(roll  * 0.5f);
+    cp = cosf(pitch * 0.5f);
+    sp = sinf(pitch * 0.5f);
+
+    dev->q[0] =  cr * cp;
+    dev->q[1] =  sr * cp;
+    dev->q[2] =  cr * sp;
+    dev->q[3] = -sr * sp;
+
+    /* 清空积分项，避免历史误差残留 */
+    dev->integral_fb[0] = dev->integral_fb[1] = dev->integral_fb[2] = 0.0f;
+
+    return 0;
+}
+
+/* ------------------------------------------------------------------ */
 uint8_t mpu6050_update(mpu6050_t *dev, float dt)
 {
     float accel_g[3], gyro_dps[3];

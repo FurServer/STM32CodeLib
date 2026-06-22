@@ -1,6 +1,6 @@
 /**
- * @file    mpu6050.h
- * @brief   精简版 MPU6050 驱动库（基础读取+零偏校准+四元数解算）
+* @file    mpu6050.h
+ * @brief   精简版 MPU6050 驱动库
  */
 
 #ifndef MPU6050_H
@@ -64,6 +64,17 @@ uint8_t mpu6050_init(mpu6050_t *dev, mpu6050_accel_range_t accel, mpu6050_gyro_r
  * @return 0 成功，非 0 失败
  */
 uint8_t mpu6050_calibrate_gyro(mpu6050_t *dev, uint16_t samples);
+
+/**
+ * @brief  用加速度计当前读数直接计算并设置初始姿态四元数。
+ *         适用于上电时传感器处于任意倾斜静止状态，可避免姿态从“水平”
+ *         缓慢收敛导致的开机初期数据错误。yaw 无法由加速度计确定，置 0。
+ *         mpu6050_init 内部已自动调用一次，通常无需手动调用。
+ * @param  dev      设备句柄
+ * @param  samples  采样平均次数（建议 16~64，用于抑制噪声）
+ * @return 0 成功，非 0 失败
+ */
+uint8_t mpu6050_set_quaternion_from_accel(mpu6050_t *dev, uint16_t samples);
 
 /**
  * @brief  读取原始 16 位寄存器数据。
