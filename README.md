@@ -5,17 +5,12 @@
 
 AHT20
 
-> AHT20_Measure(I2C_HandleTypeDef* hi2c)
+> 单纯的发送读取, 以及单纯的读取温湿度
 >
-> 单纯的发送读取指令, 需等待80ms测量完毕
->
-> AHT20_Get_Data(I2C_HandleTypeDef* hi2c, int16_t* St, uint16_t* Srh)
->
-> 单纯的读取温湿度, 返回单位为0.01(°C/%)的值
 
 LCD1602
 
-> LCD1602 (HD44780) 驱动, 带有移植层
+> LCD1602 (HD44780) 驱动, 带有类u8g2移植层, 有一大坨可用API
 
 MPU6050
 
@@ -23,23 +18,20 @@ MPU6050
 
 printf
 
-> #include printf.h
->
 > 以便将printf重定向至串口
 
 Switch_I2C1
 
-> Switch_I2C1(uint8_t stat)  使能或禁用I2C1
+> STM32F103系列48pin芯片设计缺陷, 当使能I2C1时, PB5只能作为GPIO使用
 >
-> STM32F103系列48pin芯片设计缺陷, 当使能I2C1时, PB5(SMBA)只能作为GPIO使用
->
-> 受影响的功能: SPI1重映射(MOSI), TIM3CH2重映射
->
-> 通过使能或禁用I2C1时钟, 实现与其他功能分时复用
 
 u8g2_stm32
 
 > [u8g2](https://github.com/olikraus/u8g2)的硬件接口
 
 
+
+---
+
+MIT协议是极好的
 
