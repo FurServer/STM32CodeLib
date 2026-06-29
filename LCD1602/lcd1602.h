@@ -100,7 +100,7 @@ void lcd1602_shift_right(lcd1602_t *lcd); // 显示内容右移一列
 // 将5×8点阵图案写入CGRAM, 索引 0~7
 // 自定义字符 (索引 0)
 // const uint8_t heart[8] = {0b00000,0b01010,0b10101,0b10001,0b10001,0b01010,0b00100,0b00000};
-// lcd1602_create_char(&lcd, 0, {0b00000,0b01010,0b10101,0b10001,0b10001,0b01010,0b00100,0b00000});
+// lcd1602_create_char(&lcd, 0, heart);
 // lcd1602_put_char(&lcd, 0);
 void lcd1602_create_char(lcd1602_t *lcd, uint8_t idx, const uint8_t pattern[8]);
 

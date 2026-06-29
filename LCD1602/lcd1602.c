@@ -246,6 +246,18 @@ void lcd1602_put_char(lcd1602_t *lcd, char ch)
 
     lcd_data(lcd, (uint8_t)ch);
     lcd->col++;
+
+    /*
+     * 检查刚写入的字符是否位于 DDRAM 行末 (偏移 39)。
+     * HD44780 的地址自动递增在行末会跳到另一行
+     * (0x27→0x40, 0x67→0x00), 当显示窗口被移位后,
+     * 屏幕行末与 DDRAM 行末不再对齐, 需要手动修正光标。
+     * 用 1u 确保无符号运算, 避免 col==0 时下溢误判。
+     */
+    if (((lcd->col - 1u + lcd->disp_shift) % LCD1602_DDRAM_LINE_SIZE)
+            == (LCD1602_DDRAM_LINE_SIZE - 1)) {
+        lcd1602_set_cursor(lcd, lcd->col, lcd->row);
+    }
 }
 
 void lcd1602_print(lcd1602_t *lcd, const char *str)
