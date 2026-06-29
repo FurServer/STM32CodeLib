@@ -123,9 +123,10 @@ void lcd1602_init(lcd1602_t *lcd)
     if (!lcd_ok(lcd)) return;
 
     /* 初始化追踪字段 */
-    lcd->col  = 0;
-    lcd->row  = 0;
-    lcd->wrap = 0;  // 默认关闭自动换行
+    lcd->col        = 0;
+    lcd->row        = 0;
+    lcd->wrap       = 0;  // 默认关闭自动换行
+    lcd->disp_shift = 0;  // 显示窗口偏移归零
 
     lcd_delay(lcd, 50);  /* 上电稳定 (> 40ms) */
 
@@ -181,8 +182,9 @@ void lcd1602_clear(lcd1602_t *lcd)
 {
     if (!lcd) return;
     lcd_command(lcd, LCD_CMD_CLEAR);
-    lcd->col = 0;
-    lcd->row = 0;
+    lcd->col        = 0;
+    lcd->row        = 0;
+    lcd->disp_shift = 0;
     lcd_delay(lcd, 2);
 }
 
@@ -190,8 +192,9 @@ void lcd1602_home(lcd1602_t *lcd)
 {
     if (!lcd) return;
     lcd_command(lcd, LCD_CMD_HOME);
-    lcd->col = 0;
-    lcd->row = 0;
+    lcd->col        = 0;
+    lcd->row        = 0;
+    lcd->disp_shift = 0;
     lcd_delay(lcd, 2);
 }
 
@@ -204,7 +207,9 @@ void lcd1602_set_cursor(lcd1602_t *lcd, uint8_t col, uint8_t row)
     if (!lcd || row >= sizeof(row_offset)) return;
     lcd->col = col;
     lcd->row = row;
-    lcd_command(lcd, LCD_CMD_DDRAM_ADDR | (row_offset[row] + col));
+    /* DDRAM 地址 = 行基址 + (col + disp_shift) % 40, 在行内回绕 */
+    lcd_command(lcd, LCD_CMD_DDRAM_ADDR |
+        (row_offset[row] + ((uint8_t)(col + lcd->disp_shift) % LCD1602_DDRAM_LINE_SIZE)));
 }
 
 void lcd1602_display_on(lcd1602_t *lcd)
@@ -288,10 +293,22 @@ void lcd1602_create_char(lcd1602_t *lcd, uint8_t idx, const uint8_t pattern[8])
 /* ================================================================== */
 
 void lcd1602_shift_left(lcd1602_t *lcd)
-    { if (!lcd) return; lcd_command(lcd, LCD_CMD_SHIFT | LCD_SHIFT_DISPLAY); }
+{
+    if (!lcd) return;
+    lcd_command(lcd, LCD_CMD_SHIFT | LCD_SHIFT_DISPLAY);
+    /* 窗口左移 = 起始地址右移, 在 40 字节行内回绕 */
+    lcd->disp_shift = (lcd->disp_shift + 1) % LCD1602_DDRAM_LINE_SIZE;
+}
 
 void lcd1602_shift_right(lcd1602_t *lcd)
-    { if (!lcd) return; lcd_command(lcd, LCD_CMD_SHIFT | LCD_SHIFT_DISPLAY | LCD_SHIFT_RIGHT); }
+{
+    if (!lcd) return;
+    lcd_command(lcd, LCD_CMD_SHIFT | LCD_SHIFT_DISPLAY | LCD_SHIFT_RIGHT);
+    /* 窗口右移 = 起始地址左移, 在 40 字节行内回绕 */
+    lcd->disp_shift = (lcd->disp_shift == 0)
+        ? (LCD1602_DDRAM_LINE_SIZE - 1)
+        : (lcd->disp_shift - 1);
+}
 
 /* ================================================================== */
 /* 背光                                                                  */

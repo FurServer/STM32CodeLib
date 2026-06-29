@@ -60,8 +60,9 @@ typedef enum {
 } lcd1602_mode_t;
 
 // 显示尺寸
-#define LCD1602_COLS  16
-#define LCD1602_ROWS  2
+#define LCD1602_COLS            16
+#define LCD1602_ROWS            2
+#define LCD1602_DDRAM_LINE_SIZE 40  // 每行 DDRAM 字节数
 
 // LCD1602 句柄
 struct lcd1602_t {
@@ -69,16 +70,17 @@ struct lcd1602_t {
     lcd1602_mode_t  mode;          // 接口模式
     uint8_t         display_ctrl;  // Display ON/OFF/Cursor/Blink
     uint8_t         entry_mode;    // Entry Mode 缓存
-    uint8_t         col;           // 当前光标列 (0~15)
+    uint8_t         col;           // 当前光标列 (屏幕可见列 0~15)
     uint8_t         row;           // 当前光标行 (0~1)
     uint8_t         wrap;          // 自动换行: 0=关闭, 1=开启
+    uint8_t         disp_shift;    // 显示窗口偏移 (0~39), 移位后 set_cursor(0,row) 指向可见第一列
 };
 
 // API
 void lcd1602_init(lcd1602_t *lcd);  // 初始化
 void lcd1602_clear(lcd1602_t *lcd); // 清屏, 光标归位
 void lcd1602_home(lcd1602_t *lcd);  // 光标归位
-void lcd1602_set_cursor(lcd1602_t *lcd, uint8_t col, uint8_t row); // 设置光标位置 (col:0~15, row:0~1)
+void lcd1602_set_cursor(lcd1602_t *lcd, uint8_t col, uint8_t row); // 设置光标位置,不受行偏移影响 (col:0~15, row:0~1)
 
 void lcd1602_display_on(lcd1602_t *lcd);  // 开启显示
 void lcd1602_display_off(lcd1602_t *lcd); // 关闭显示 (保留数据)
@@ -87,13 +89,6 @@ void lcd1602_cursor_off(lcd1602_t *lcd);  // 隐藏光标
 void lcd1602_blink_on(lcd1602_t *lcd);    // 开启字符闪烁
 void lcd1602_blink_off(lcd1602_t *lcd);   // 关闭字符闪烁
 
-// 将5×8点阵图案写入CGRAM, 索引 0~7
-// 自定义字符 (索引 0)
-// const uint8_t heart[8] = {0b00000,0b01010,0b10101,0b10001,0b10001,0b01010,0b00100,0b00000};
-// lcd1602_create_char(&lcd, 0, heart);
-// lcd1602_put_char(&lcd, 0);
-void lcd1602_create_char(lcd1602_t *lcd, uint8_t idx, const uint8_t pattern[8]);
-
 void lcd1602_put_char(lcd1602_t *lcd, char ch);      // 在当前位置写入单个字符, 光标自动后移; 若开启自动换行则自动换行
 void lcd1602_print(lcd1602_t *lcd, const char *str); // 写入字符串, 支持 \n 换行, 配合自动换行使用
 
@@ -101,6 +96,13 @@ void lcd1602_set_wrap(lcd1602_t *lcd, uint8_t enable); // 设置自动换行: 0=
 
 void lcd1602_shift_left(lcd1602_t *lcd);  // 显示内容左移一列
 void lcd1602_shift_right(lcd1602_t *lcd); // 显示内容右移一列
+
+// 将5×8点阵图案写入CGRAM, 索引 0~7
+// 自定义字符 (索引 0)
+// const uint8_t heart[8] = {0b00000,0b01010,0b10101,0b10001,0b10001,0b01010,0b00100,0b00000};
+// lcd1602_create_char(&lcd, 0, {0b00000,0b01010,0b10101,0b10001,0b10001,0b01010,0b00100,0b00000});
+// lcd1602_put_char(&lcd, 0);
+void lcd1602_create_char(lcd1602_t *lcd, uint8_t idx, const uint8_t pattern[8]);
 
 void lcd1602_backlight(lcd1602_t *lcd, uint8_t brightness); // 背光亮度 0~255
 
