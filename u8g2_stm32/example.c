@@ -2,7 +2,7 @@
 #include "u8g2_stm32.h"
 
 // 设备句柄
-u8g2_t u8g2;
+static u8g2_t u8g2;
 
 int main(void)
 {

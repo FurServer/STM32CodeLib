@@ -4,8 +4,8 @@ int16_t temperature;
 uint16_t humidity;
 
 // u8g2 (可选)
-u8g2_t u8g2;
-char oled[16];
+static u8g2_t u8g2;
+static char oled[16];
 
 int main(void)
 {
