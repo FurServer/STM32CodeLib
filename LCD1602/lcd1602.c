@@ -122,6 +122,9 @@ void lcd1602_init(lcd1602_t *lcd)
 {
     if (!lcd_ok(lcd)) return;
 
+    // port层初始化
+    lcd->msg_cb(lcd, LCD1602_MSG_INIT, 0, NULL);
+
     /* 初始化追踪字段 */
     lcd->col        = 0;
     lcd->row        = 0;
@@ -180,7 +183,7 @@ void lcd1602_init(lcd1602_t *lcd)
 
 void lcd1602_clear(lcd1602_t *lcd)
 {
-    if (!lcd) return;
+    if (!lcd_ok(lcd)) return;
     lcd_command(lcd, LCD_CMD_CLEAR);
     lcd->col        = 0;
     lcd->row        = 0;
@@ -190,7 +193,7 @@ void lcd1602_clear(lcd1602_t *lcd)
 
 void lcd1602_home(lcd1602_t *lcd)
 {
-    if (!lcd) return;
+    if (!lcd_ok(lcd)) return;
     lcd_command(lcd, LCD_CMD_HOME);
     lcd->col        = 0;
     lcd->row        = 0;
@@ -204,7 +207,7 @@ void lcd1602_set_cursor(lcd1602_t *lcd, uint8_t col, uint8_t row)
         LCD_DDRAM_ROW0, LCD_DDRAM_ROW1,
         LCD_DDRAM_ROW2, LCD_DDRAM_ROW3
     };
-    if (!lcd || row >= sizeof(row_offset)) return;
+    if (!lcd_ok(lcd) || row >= sizeof(row_offset)) return;
     lcd->col = col;
     lcd->row = row;
     /* DDRAM 地址 = 行基址 + (col + disp_shift) % 40, 在行内回绕 */
@@ -213,17 +216,17 @@ void lcd1602_set_cursor(lcd1602_t *lcd, uint8_t col, uint8_t row)
 }
 
 void lcd1602_display_on(lcd1602_t *lcd)
-    { if (!lcd) return; lcd->display_ctrl |= LCD_DISPLAY_ON;  lcd_update_display(lcd); }
+    { if (!lcd_ok(lcd)) return; lcd->display_ctrl |= LCD_DISPLAY_ON;  lcd_update_display(lcd); }
 void lcd1602_display_off(lcd1602_t *lcd)
-    { if (!lcd) return; lcd->display_ctrl &= ~LCD_DISPLAY_ON; lcd_update_display(lcd); }
+    { if (!lcd_ok(lcd)) return; lcd->display_ctrl &= ~LCD_DISPLAY_ON; lcd_update_display(lcd); }
 void lcd1602_cursor_on(lcd1602_t *lcd)
-    { if (!lcd) return; lcd->display_ctrl |= LCD_CURSOR_ON;   lcd_update_display(lcd); }
+    { if (!lcd_ok(lcd)) return; lcd->display_ctrl |= LCD_CURSOR_ON;   lcd_update_display(lcd); }
 void lcd1602_cursor_off(lcd1602_t *lcd)
-    { if (!lcd) return; lcd->display_ctrl &= ~LCD_CURSOR_ON;  lcd_update_display(lcd); }
+    { if (!lcd_ok(lcd)) return; lcd->display_ctrl &= ~LCD_CURSOR_ON;  lcd_update_display(lcd); }
 void lcd1602_blink_on(lcd1602_t *lcd)
-    { if (!lcd) return; lcd->display_ctrl |= LCD_BLINK_ON;    lcd_update_display(lcd); }
+    { if (!lcd_ok(lcd)) return; lcd->display_ctrl |= LCD_BLINK_ON;    lcd_update_display(lcd); }
 void lcd1602_blink_off(lcd1602_t *lcd)
-    { if (!lcd) return; lcd->display_ctrl &= ~LCD_BLINK_ON;   lcd_update_display(lcd); }
+    { if (!lcd_ok(lcd)) return; lcd->display_ctrl &= ~LCD_BLINK_ON;   lcd_update_display(lcd); }
 
 /* ================================================================== */
 /* 写入数据                                                              */
@@ -231,7 +234,7 @@ void lcd1602_blink_off(lcd1602_t *lcd)
 
 void lcd1602_put_char(lcd1602_t *lcd, char ch)
 {
-    if (!lcd) return;
+    if (!lcd_ok(lcd)) return;
 
     /* 自动换行检查: 当前行已满 (col >= LCD1602_COLS) */
     if (lcd->wrap && lcd->col >= LCD1602_COLS) {
@@ -262,7 +265,7 @@ void lcd1602_put_char(lcd1602_t *lcd, char ch)
 
 void lcd1602_print(lcd1602_t *lcd, const char *str)
 {
-    if (!lcd || !str) return;
+    if (!lcd_ok(lcd) || !str) return;
 
     while (*str) {
         if (*str == '\n') {
@@ -282,7 +285,7 @@ void lcd1602_print(lcd1602_t *lcd, const char *str)
 
 void lcd1602_set_wrap(lcd1602_t *lcd, uint8_t enable)
 {
-    if (!lcd) return;
+    if (!lcd_ok(lcd)) return;
     lcd->wrap = enable ? 1 : 0;
 }
 
@@ -293,7 +296,7 @@ void lcd1602_set_wrap(lcd1602_t *lcd, uint8_t enable)
 void lcd1602_create_char(lcd1602_t *lcd, uint8_t idx, const uint8_t pattern[8])
 {
     uint8_t i;
-    if (!lcd || !pattern || idx > 7) return;
+    if (!lcd_ok(lcd) || !pattern || idx > 7) return;
     lcd_command(lcd, LCD_CMD_CGRAM_ADDR | (idx << 3));
     for (i = 0; i < 8; i++) {
         lcd_data(lcd, pattern[i] & 0x1F);
@@ -306,7 +309,7 @@ void lcd1602_create_char(lcd1602_t *lcd, uint8_t idx, const uint8_t pattern[8])
 
 void lcd1602_shift_left(lcd1602_t *lcd)
 {
-    if (!lcd) return;
+    if (!lcd_ok(lcd)) return;
     lcd_command(lcd, LCD_CMD_SHIFT | LCD_SHIFT_DISPLAY);
     /* 窗口左移 = 起始地址右移, 在 40 字节行内回绕 */
     lcd->disp_shift = (lcd->disp_shift + 1) % LCD1602_DDRAM_LINE_SIZE;
@@ -314,7 +317,7 @@ void lcd1602_shift_left(lcd1602_t *lcd)
 
 void lcd1602_shift_right(lcd1602_t *lcd)
 {
-    if (!lcd) return;
+    if (!lcd_ok(lcd)) return;
     lcd_command(lcd, LCD_CMD_SHIFT | LCD_SHIFT_DISPLAY | LCD_SHIFT_RIGHT);
     /* 窗口右移 = 起始地址左移, 在 40 字节行内回绕 */
     lcd->disp_shift = (lcd->disp_shift == 0)
